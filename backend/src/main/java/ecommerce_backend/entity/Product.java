@@ -2,6 +2,9 @@ package ecommerce_backend.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "products")
@@ -71,5 +74,17 @@ public class Product {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
+    public Category getCategory() {
+    return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }

@@ -21,6 +21,13 @@ public class ProductRequest {
     @DecimalMin(value = "0.01", message = "Price must be greater than 0")
     private BigDecimal price;
 
+    @NotNull(message = "Category ID is required")
+    private Long categoryId;
+
+    public Long getCategoryId() {
+        return categoryId;
+    }
+
     @NotNull(message = "Stock quantity is required")
     @PositiveOrZero(message = "Stock quantity cannot be negative")
     private Integer stockQuantity;
@@ -29,6 +36,10 @@ public class ProductRequest {
         return name;
     }
 
+    public void setCategoryId(Long categoryId) {
+    this.categoryId = categoryId;
+    }
+    
     public void setName(String name) {
         this.name = name;
     }

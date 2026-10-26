@@ -1,12 +1,12 @@
 package ecommerce_backend.controller;
-
 import ecommerce_backend.dto.ProductRequest;
-import ecommerce_backend.dto.ProductResponse;
 import ecommerce_backend.entity.Product;
-import ecommerce_backend.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import ecommerce_backend.dto.ProductResponse;
+import ecommerce_backend.service.ProductService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,9 +29,10 @@ public class ProductController {
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
-        product.setStockQuantity(request.getStockQuantity());
+        product.setStockQuantity(request.getStockQuantity());       
 
-        Product savedProduct = productService.createProduct(product);
+         Product savedProduct = productService.createProduct(
+            product, request.getCategoryId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -65,7 +66,9 @@ public class ProductController {
                 product.getDescription(),
                 product.getPrice(),
                 product.getStockQuantity(),
-                product.getActive()
+                product.getActive(),
+                product.getCategory() != null ? product.getCategory().getId() : null,
+                product.getCategory() != null ? product.getCategory().getName() : null
         );
     }
 
