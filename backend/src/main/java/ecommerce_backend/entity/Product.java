@@ -2,9 +2,8 @@ package ecommerce_backend.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -28,6 +27,9 @@ public class Product {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<ProductVariant> variants = new ArrayList<>();
 
     public Product() {
     }
