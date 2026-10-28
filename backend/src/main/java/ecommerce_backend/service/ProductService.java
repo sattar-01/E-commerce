@@ -52,31 +52,30 @@ public class ProductService {
                                 "Product not found with id: " + id));
     }
 
-    public Product updateProduct(Long id, Product productDetails) {
-
+   
+    public Product updateProduct(Long id, Product productDetails, Long categoryId) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Product not found with id: " + id));
+            .orElseThrow(() ->
+                new ResourceNotFoundException(
+                    "Product not found with id: " + id
+                )
+            );
+
+        if (categoryId == null) {
+            throw new IllegalArgumentException("Category ID is required");
+        }
+
+        Category category = findCategory(categoryId);
 
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
         product.setPrice(productDetails.getPrice());
         product.setStockQuantity(productDetails.getStockQuantity());
-
-        if (productDetails.getCategory() == null
-                || productDetails.getCategory().getId() == null) {
-            throw new IllegalArgumentException(
-                    "Category ID is required");
-        }
-
-        Category category = findCategory(
-                productDetails.getCategory().getId());
-
         product.setCategory(category);
 
         return productRepository.save(product);
     }
+
 
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)

@@ -72,23 +72,27 @@ public class ProductController {
         );
     }
 
+   
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
 
         Product productDetails = new Product();
-
         productDetails.setName(request.getName());
         productDetails.setDescription(request.getDescription());
         productDetails.setPrice(request.getPrice());
         productDetails.setStockQuantity(request.getStockQuantity());
 
-        Product updatedProduct =
-                productService.updateProduct(id, productDetails);
+        Product updatedProduct = productService.updateProduct(
+            id,
+            productDetails,
+            request.getCategoryId()
+        );
 
         return ResponseEntity.ok(toResponse(updatedProduct));
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {

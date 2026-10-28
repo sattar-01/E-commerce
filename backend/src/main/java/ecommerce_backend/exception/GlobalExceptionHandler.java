@@ -1,68 +1,115 @@
 package ecommerce_backend.exception;
-
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
-            ResourceNotFoundException exception) {
+    private static final Logger log =
+            LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // Common response format for errors
+    private ResponseEntity<Map<String, Object>> buildResponse(
+            HttpStatus status,
+            String message,
+            String error,
+            HttpServletRequest request) {
 
         Map<String, Object> response = new LinkedHashMap<>();
 
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("timestamp", LocalDateTime.now());
-        response.put("message", exception.getMessage());
-        response.put("error", "Not Found");
+        response.put("timestamp", Instant.now().toString());
+        response.put("status", status.value());
+        response.put("error", error);
+        response.put("message", message);
+        response.put("path", request.getRequestURI());
 
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(response);
+        return ResponseEntity.status(status).body(response);
     }
 
+    // 404 - Resource not found
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFound(
+            ResourceNotFoundException exception,
+            HttpServletRequest request) {
+
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                "Not Found",
+                request
+        );
+    }
+
+    // 400 - Request validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(
-            MethodArgumentNotValidException exception) {
+            MethodArgumentNotValidException exception,
+            HttpServletRequest request) {
 
         Map<String, String> errors = new LinkedHashMap<>();
 
         exception.getBindingResult()
                 .getFieldErrors()
                 .forEach(error ->
-                        errors.put(error.getField(), error.getDefaultMessage())
+                        errors.put(
+                                error.getField(),
+                                error.getDefaultMessage()
+                        )
                 );
 
         Map<String, Object> response = new LinkedHashMap<>();
 
+        response.put("timestamp", Instant.now().toString());
         response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("timestamp", LocalDateTime.now());
-        response.put("message", "Request validation failed");
         response.put("error", "Validation Failed");
+        response.put("message", "Request validation failed");
+        response.put("path", request.getRequestURI());
         response.put("errors", errors);
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+        return ResponseEntity.badRequest().body(response);
     }
 
-        @ExceptionHandler(IllegalArgumentException.class)
-        public ResponseEntity<Map<String, Object>> handleIllegalArgument(
-                IllegalArgumentException ex) {
+    // 409 - Conflict, such as duplicate SKU
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(
+            IllegalArgumentException exception,
+            HttpServletRequest request) {
 
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", 409);
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", ex.getMessage());
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                "Conflict",
+                request
+        );
+    }
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
-        }
+    // 500 - Unexpected errors
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleUnexpectedException(
+            Exception exception,
+            HttpServletRequest request) {
+
+        log.error(
+                "Unexpected error on path {}",
+                request.getRequestURI(),
+                exception
+        );
+
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                "Internal Server Error",
+                request
+        );
+    }
 }
