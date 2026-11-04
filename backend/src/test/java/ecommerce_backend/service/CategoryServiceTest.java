@@ -10,11 +10,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import java.util.List;
+import java.util.Optional;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.*;
 import ecommerce_backend.dto.CategoryRequest;
 import ecommerce_backend.dto.CategoryResponse;
 import ecommerce_backend.entity.Category;
+import ecommerce_backend.exception.ResourceNotFoundException;
 import ecommerce_backend.repository.CategoryRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,55 +110,71 @@ class CategoryServiceTest {
             }
             
             
-            @Test 
-                void getCategoryByIdShouldReturnCategoryWhenExists() {
-                    when(categoryRepository.findById(1L))
-                    .thenReturn(java.util.Optional.of(category));
+        @Test 
+            void getCategoryByIdShouldReturnCategoryWhenExists() {
+                when(categoryRepository.findById(1L))
+                .thenReturn(java.util.Optional.of(category));
 
-                    var response = categoryService.getCategoryById(1L);
+                var response = categoryService.getCategoryById(1L);
 
-                    assertNotNull(response);
-                    assertEquals(category.getName(), response.getName());
-                    assertEquals(category.getDescription(), response.getDescription());
+                assertNotNull(response);
+                assertEquals(category.getName(), response.getName());
+                assertEquals(category.getDescription(), response.getDescription());
 
-                    verify(categoryRepository).findById(1L);
-                }
+                verify(categoryRepository).findById(1L);
+        }
 
-            @Test 
-                void getCategoryByIdShouldThrowExceptionWhenCategoryDoesNotExist() {
-                    when(categoryRepository.findById(1L))
-                    .thenReturn(java.util.Optional.empty());
+      
+        @Test
+        void getCategoryByIdShouldThrowExceptionWhenCategoryDoesNotExist() {
 
-                    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                        categoryService.getCategoryById(1L);
-                    });
+            // Arrange
+            when(categoryRepository.findById(1L))
+                    .thenReturn(Optional.empty());
 
-                    assertEquals("Category not found with id: 1", exception.getMessage());
-                    verify(categoryRepository).findById(1L);
-                }
-                
-            @Test
-                void deleteCategoryShouldDeleteCategoryWhenExists() {
-                    when(categoryRepository.findById(1L))
-                    .thenReturn(java.util.Optional.of(category));
+            // Act
+            ResourceNotFoundException exception = assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> categoryService.getCategoryById(1L)
+            );
 
-                    categoryService.deleteCategory(1L);
+            // Assert
+            assertEquals("Category not found with id: 1", exception.getMessage());
+            verify(categoryRepository).findById(1L);
+        }
 
-                    verify(categoryRepository).findById(1L);
-                    verify(categoryRepository).delete(category);
-                }
-                
-            @Test
-                void deleteCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
-                    when(categoryRepository.findById(1L))
-                    .thenReturn(java.util.Optional.empty());
+        @Test
+        void deleteCategoryShouldDeleteCategoryWhenExists() {
 
-                    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-                        categoryService.deleteCategory(1L);
-                    });
+            // Arrange
+            when(categoryRepository.findById(1L))
+                    .thenReturn(Optional.of(category));
 
-                    assertEquals("Category not found with id: 1", exception.getMessage());
-                    verify(categoryRepository).findById(1L);
-                    verify(categoryRepository, never()).delete(any(Category.class));
-                }    
+            // Act
+            categoryService.deleteCategory(1L);
+
+            // Assert
+            verify(categoryRepository).findById(1L);
+            verify(categoryRepository).delete(category);
+        }
+
+        @Test
+        void deleteCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
+
+            // Arrange
+            when(categoryRepository.findById(1L))
+                    .thenReturn(Optional.empty());
+
+            // Act
+            ResourceNotFoundException exception = assertThrows(
+                    ResourceNotFoundException.class,
+                    () -> categoryService.deleteCategory(1L)
+            );
+
+            // Assert
+            assertEquals("Category not found with id: 1", exception.getMessage());
+
+            verify(categoryRepository).findById(1L);
+            verify(categoryRepository, never()).delete(any(Category.class));
+        }
 }
