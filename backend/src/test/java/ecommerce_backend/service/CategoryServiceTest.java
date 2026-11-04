@@ -92,4 +92,70 @@ class CategoryServiceTest {
 
                 verify(categoryRepository).findAll();
             }
+           
+         @Test
+            void getAllCategoriesShouldReturnEmptyListWhenNoCategoriesExist() {
+                when(categoryRepository.findAll())
+                .thenReturn(List.of());
+
+                var response = categoryService.getAllCategories();
+
+                assertNotNull(response);
+                assertTrue(response.isEmpty());
+
+                verify(categoryRepository).findAll();
+            }
+            
+            
+            @Test 
+                void getCategoryByIdShouldReturnCategoryWhenExists() {
+                    when(categoryRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(category));
+
+                    var response = categoryService.getCategoryById(1L);
+
+                    assertNotNull(response);
+                    assertEquals(category.getName(), response.getName());
+                    assertEquals(category.getDescription(), response.getDescription());
+
+                    verify(categoryRepository).findById(1L);
+                }
+
+            @Test 
+                void getCategoryByIdShouldThrowExceptionWhenCategoryDoesNotExist() {
+                    when(categoryRepository.findById(1L))
+                    .thenReturn(java.util.Optional.empty());
+
+                    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                        categoryService.getCategoryById(1L);
+                    });
+
+                    assertEquals("Category not found with id: 1", exception.getMessage());
+                    verify(categoryRepository).findById(1L);
+                }
+                
+            @Test
+                void deleteCategoryShouldDeleteCategoryWhenExists() {
+                    when(categoryRepository.findById(1L))
+                    .thenReturn(java.util.Optional.of(category));
+
+                    categoryService.deleteCategory(1L);
+
+                    verify(categoryRepository).findById(1L);
+                    verify(categoryRepository).delete(category);
+                }
+                
+            @Test
+                void deleteCategoryShouldThrowExceptionWhenCategoryDoesNotExist() {
+                    when(categoryRepository.findById(1L))
+                    .thenReturn(java.util.Optional.empty());
+
+                    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+                        categoryService.deleteCategory(1L);
+                    });
+
+                    assertEquals("Category not found with id: 1", exception.getMessage());
+                    verify(categoryRepository).findById(1L);
+                    verify(categoryRepository, never()).delete(any(Category.class));
+                }    
 }
